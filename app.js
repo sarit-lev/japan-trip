@@ -112,7 +112,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=14'), loadJSON('data/japan-outline.json?v=14'), loadJSON('data/credits.json?v=14').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=15'), loadJSON('data/japan-outline.json?v=15'), loadJSON('data/credits.json?v=15').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
