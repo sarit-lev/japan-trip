@@ -111,7 +111,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=10'), loadJSON('data/japan-outline.json?v=10'), loadJSON('data/credits.json?v=10').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=11'), loadJSON('data/japan-outline.json?v=11'), loadJSON('data/credits.json?v=11').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -149,7 +149,7 @@ function tickClock() {
   const f = tz => new Intl.DateTimeFormat('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
   const hereName = hereTz === 'Asia/Bangkok' ? 'בבנגקוק' : hereTz === 'Asia/Jerusalem' ? '' : 'ביפן';
   const el = $('#clock');
-  el.innerHTML = `<span class="clock__il">בארץ <b><bdi>${f('Asia/Jerusalem')}</bdi></b></span>${hereName ? `<span class="clock__sep"></span><span class="clock__here">${hereName} <b><bdi>${f(hereTz)}</bdi></b></span>` : ''}`;
+  el.innerHTML = `<span class="clock__il">השעה בארץ <b><bdi>${f('Asia/Jerusalem')}</bdi></b></span>`;
 }
 
 // ---------- navigation ----------
