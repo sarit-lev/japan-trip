@@ -159,7 +159,7 @@ bdi,.num{unicode-bidi:isolate}
 .stepper__btn:disabled{color:var(--label-3)}
 [dir=rtl] .chev{transform:scaleX(-1)}
 
-.pill{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:999px;background:var(--fill);font-size:1.7rem;font-weight:600;width:max-content;margin-top:10px;transition:transform 120ms}
+.pill{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:999px;background:var(--fill);font-size:1.7rem;font-weight:600;width:max-content;margin-top:10px;transition:transform 120ms}
 .pill:active{transform:scale(.96)}
 .pill--accent{background:var(--accent);color:var(--on-accent)}
 
@@ -281,7 +281,7 @@ bdi,.num{unicode-bidi:isolate}
 .bigmap{position:absolute;inset:0;background:var(--surface-2)}
 .chips{position:absolute;inset-inline:0;top:calc(74px + env(safe-area-inset-top));z-index:1001;display:flex;gap:8px;overflow-x:auto;padding:4px var(--gutter) 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;height:40px;padding:0 14px;border-radius:999px;background:var(--glass-bg);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--glass-shadow);font-weight:600;font-size:1.6rem;color:var(--label);white-space:nowrap;transition:transform 120ms}
+.chip{flex:0 0 auto;height:44px;padding:0 14px;border-radius:999px;background:var(--glass-bg);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--glass-shadow);font-weight:600;font-size:1.6rem;color:var(--label);white-space:nowrap;transition:transform 120ms}
 .chip:active{transform:scale(.95)}
 .chip.is-active{background:var(--accent);color:var(--on-accent)}
 .locate{position:absolute;inset-inline-start:var(--gutter);bottom:calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom));z-index:1001}
@@ -297,7 +297,7 @@ bdi,.num{unicode-bidi:isolate}
 /* ---------- tips ---------- */
 .segments{display:flex;gap:6px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}
 .segments::-webkit-scrollbar{display:none}
-.seg{flex:0 0 auto;height:40px;padding:0 14px;border-radius:999px;background:var(--fill);font-weight:600;font-size:1.6rem;transition:transform 120ms}
+.seg{flex:0 0 auto;height:44px;padding:0 14px;border-radius:999px;background:var(--fill);font-weight:600;font-size:1.6rem;transition:transform 120ms}
 .seg:active{transform:scale(.95)}
 .seg.is-active{background:var(--label);color:var(--bg)}
 .tipsec{margin-bottom:28px}

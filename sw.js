@@ -1,6 +1,6 @@
 /* Japan trip service worker. App shell precached; map tiles cached as they are seen.
    Bump CACHE to ship an update. */
-const CACHE = 'japan-v1';
+const CACHE = 'japan-v2';
 const TILES = 'japan-tiles-v1';
 const TILE_CAP = 700;
 const ASSETS = [
