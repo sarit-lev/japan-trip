@@ -111,7 +111,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=9'), loadJSON('data/japan-outline.json?v=9'), loadJSON('data/credits.json?v=9').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=10'), loadJSON('data/japan-outline.json?v=10'), loadJSON('data/credits.json?v=10').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -240,7 +240,7 @@ function renderToday() {
     const hotel = base && base.hotel;
     const stopsN = D.stops.filter(s => s.kind !== 'hotel' && s.kind !== 'transit').length || D.stops.length;
     rc.innerHTML = `
-      <div class="route__end"><div class="route__code">${esc(R.from)}</div><div class="route__city">${D.n > 0 ? 'יציאה בבוקר' : 'המראה'}</div></div>
+      <div class="route__end"><div class="route__code">${esc(R.from)}</div><div class="route__city">${R.mode === 'flight' ? 'המראה' : 'יציאה'}</div></div>
       <div class="route__mid"><div class="route__line">${ICON[R.mode] || ICON.bus}</div><div class="route__dur">${R.mode === 'flight' ? '' : 'כ-'}${esc(fmtMin(R.minutes))}</div></div>
       <div class="route__end route__end--to"><div class="route__code">${esc(R.to)}</div><div class="route__city">${MODE_LABEL[R.mode] || ''}</div></div>
       <dl class="route__meta">
