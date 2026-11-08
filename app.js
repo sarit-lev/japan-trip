@@ -111,7 +111,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=8'), loadJSON('data/japan-outline.json?v=8'), loadJSON('data/credits.json?v=8').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=9'), loadJSON('data/japan-outline.json?v=9'), loadJSON('data/credits.json?v=9').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -251,6 +251,16 @@ function renderToday() {
   }
 
   renderWeather();
+
+  const M = D.mission, mc = $('#mission');
+  mc.hidden = !M;
+  if (M) mc.innerHTML = `
+    <div class="mission__head"><span class="badge badge--live">משימה</span><h3 class="mission__title">${esc(M.title)}</h3></div>
+    <div class="mission__imgs">${M.imgs.map(i => `<img src="${esc(i.src)}" alt="${esc(i.alt)}">`).join('')}</div>
+    <p class="mission__text">${bidi(M.text)}</p>
+    <div class="mission__show"><span class="mission__th" lang="th">${esc(M.show.th)}</span><span class="mission__en"><bdi>${esc(M.show.en)}</bdi></span><span class="mission__hint">${esc(M.show.he)}</span></div>
+    <p class="mission__text">${bidi(M.where)}</p>
+    <a class="place__btn place__btn--primary" href="${GMAPS_LL(M.store)}" target="_blank" rel="noopener">${ICON.gmaps}<span>${esc(M.store.name)} בגוגל מפות</span></a>`;
 
   const N = D.note, nc = $('#note');
   nc.hidden = !N;
