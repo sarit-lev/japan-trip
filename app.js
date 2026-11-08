@@ -16,6 +16,7 @@ document.addEventListener('touchstart', () => {}, { passive: true });
 const GMAPS_LL = (s) => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
 const AMAPS = (s) => `https://maps.apple.com/?q=${encodeURIComponent(s.en || s.name)}&ll=${s.lat},${s.lng}`;
 const ICON = {
+  flagIL: '<svg class="flag" viewBox="0 0 40 40" aria-hidden="true"><defs><clipPath id="flagClip"><circle cx="20" cy="20" r="20"/></clipPath></defs><g clip-path="url(#flagClip)"><rect width="40" height="40" fill="#fff"/><rect y="7" width="40" height="5" fill="#0038B8"/><rect y="28" width="40" height="5" fill="#0038B8"/><path d="M20 12.8l6.2 10.8H13.8z M20 27.2l6.2-10.8H13.8z" fill="none" stroke="#0038B8" stroke-width="1.6" stroke-linejoin="round"/></g></svg>',
   gmaps: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
   sight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M5 7l1-3h12l1 3M7 7v13M17 7v13M4 11h16"/></svg>',
@@ -111,7 +112,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=11'), loadJSON('data/japan-outline.json?v=11'), loadJSON('data/credits.json?v=11').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=12'), loadJSON('data/japan-outline.json?v=12'), loadJSON('data/credits.json?v=12').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -143,13 +144,8 @@ async function boot() {
 
 // ---------- clock: Israel time, always on top ----------
 function tickClock() {
-  const T = state.trip; if (!T) return;
-  const D = T.days[Math.min(Math.max(state.todayIdx, 0), T.days.length - 1)];
-  const hereTz = (D.weatherAt && D.weatherAt.tz) || T.tz;
-  const f = tz => new Intl.DateTimeFormat('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-  const hereName = hereTz === 'Asia/Bangkok' ? 'בבנגקוק' : hereTz === 'Asia/Jerusalem' ? '' : 'ביפן';
-  const el = $('#clock');
-  el.innerHTML = `<span class="clock__il">השעה בארץ <b><bdi>${f('Asia/Jerusalem')}</bdi></b></span>`;
+  const t = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+  $$('[data-clock]').forEach(el => { el.innerHTML = `${ICON.flagIL}<b><bdi>${t}</bdi></b>`; el.setAttribute('aria-label', `השעה בישראל ${t}`); });
 }
 
 // ---------- navigation ----------

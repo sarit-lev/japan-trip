@@ -16,13 +16,11 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <link rel="stylesheet" href="vendor/leaflet.css">
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
 
 <!-- Content layer -->
-<div class="clock glass" id="clock" role="status" aria-live="off"></div>
-
 <main class="app" id="app">
 
   <!-- ===== Today ===== -->
@@ -30,6 +28,7 @@
     <header class="top">
       <div class="top__row">
         <h1 class="largetitle" id="todayTitle">היום</h1>
+        <div class="clock" data-clock role="status" aria-live="off"></div>
         <div class="stepper" role="group" aria-label="מעבר בין ימים">
           <button class="stepper__btn" id="dayPrev" aria-label="היום הקודם">
             <svg class="chev chev--back" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -74,7 +73,7 @@
 
   <!-- ===== Journey ===== -->
   <section class="screen" id="screen-journey" data-screen="journey" hidden>
-    <header class="top"><h1 class="largetitle">המסע</h1></header>
+    <header class="top"><div class="top__row"><h1 class="largetitle">המסע</h1><div class="clock" data-clock role="status" aria-live="off"></div></div></header>
     <p class="lead" id="journeyLead"></p>
     <figure class="routemap card" id="routeMap" aria-label="מפת המסלול ביפן"></figure>
     <div class="cities" id="cities"></div>
@@ -86,6 +85,7 @@
   <section class="screen screen--map" id="screen-map" data-screen="map" hidden>
     <header class="top top--overlay">
       <h1 class="largetitle">מפה</h1>
+      <div class="clock glass" data-clock role="status" aria-live="off"></div>
     </header>
     <div class="chips" id="mapChips" role="tablist" aria-label="סינון לפי יום"></div>
     <div class="bigmap" id="bigMap" role="region" aria-label="מפה אינטראקטיבית"></div>
@@ -96,7 +96,7 @@
 
   <!-- ===== Tips ===== -->
   <section class="screen" id="screen-tips" data-screen="tips" hidden>
-    <header class="top"><h1 class="largetitle">טיפים</h1></header>
+    <header class="top"><div class="top__row"><h1 class="largetitle">טיפים</h1><div class="clock" data-clock role="status" aria-live="off"></div></div></header>
     <div class="segments" id="tipSegments" role="tablist"></div>
     <div id="tipsBody"></div>
   </section>
@@ -141,6 +141,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="vendor/leaflet.js"></script>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
