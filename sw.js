@@ -1,6 +1,6 @@
 /* Japan trip service worker. App shell precached; map tiles cached as they are seen.
    Bump CACHE to ship an update. */
-const CACHE = 'japan-v2';
+const CACHE = 'japan-v4';
 const TILES = 'japan-tiles-v1';
 const TILE_CAP = 700;
 const ASSETS = [
@@ -10,6 +10,25 @@ const ASSETS = [
   './app.js',
   './data/trip.json',
   './data/japan-outline.json',
+  './data/credits.json',
+  './img/bkk.jpg',
+  './img/hakone.jpg',
+  './img/home.jpg',
+  './img/kamakura.jpg',
+  './img/kix.jpg',
+  './img/kobe.jpg',
+  './img/kyoto.jpg',
+  './img/matsumoto.jpg',
+  './img/miyajima.jpg',
+  './img/nara.jpg',
+  './img/odaiba.jpg',
+  './img/osaka.jpg',
+  './img/sensoji.jpg',
+  './img/shibuya.jpg',
+  './img/shirakawa.jpg',
+  './img/takayama.jpg',
+  './img/tlv.jpg',
+  './img/tokyo.jpg',
   './vendor/leaflet.js',
   './vendor/leaflet.css',
   './manifest.webmanifest',

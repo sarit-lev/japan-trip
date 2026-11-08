@@ -13,7 +13,11 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.addEventListener('touchstart', () => {}, { passive: true });
 
 // ---------- icons ----------
+const GMAPS_LL = (s) => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+const AMAPS = (s) => `https://maps.apple.com/?q=${encodeURIComponent(s.en || s.name)}&ll=${s.lat},${s.lng}`;
 const ICON = {
+  gmaps: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
   sight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M5 7l1-3h12l1 3M7 7v13M17 7v13M4 11h16"/></svg>',
   food: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 3c-2 1-3 4-3 7h4v11M17 3v7"/></svg>',
   shop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 14H5L6 7z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>',
@@ -107,8 +111,8 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline] = await Promise.all([loadJSON('data/trip.json'), loadJSON('data/japan-outline.json')]);
-  state.trip = trip; state.outline = outline;
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json'), loadJSON('data/japan-outline.json'), loadJSON('data/credits.json').catch(() => null)]);
+  state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
   const forced = q.get('date');
@@ -193,61 +197,69 @@ function renderToday() {
   const base = T.bases.find(b => b.id === D.base);
   const tripDays = T.days.filter(d => d.n > 0).length;
   const kicker = D.n > 0 ? `יום ${D.n} מתוך ${tripDays}` : 'בדרך';
-  const progress = Math.round(((state.dayIdx + 1) / n) * 100);
 
   let pre = '';
   if (before && state.dayIdx === 0) {
     const left = daysBetween(state.today, T.days[0].date);
     pre = `<div class="count"><span class="count__n num">${left}</span><span class="count__l">${left === 1 ? 'יום להמראה' : 'ימים להמראה'}</span></div>`;
   }
-  if (after && state.dayIdx === n - 1) pre = `<p class="hero__sub" style="margin-bottom:8px">ברוכים השבים הביתה, שמחה ובני.</p>`;
-  const greeting = (isToday && D.n <= 1 && !before) ? `<p class="hero__sub" style="margin-bottom:8px">שמחה ובני, נסיעה טובה.</p>` : '';
-
-  $('#hero').className = 'hero' + (D.shabbat ? ' hero--shabbat' : '');
+  const credit = (state.credits || {})[D.img];
   $('#hero').innerHTML = `
-    ${base && base.ja ? `<div class="hero__ja" aria-hidden="true">${esc(base.ja)}</div>` : ''}
-    <div class="hero__kicker"><span class="hero__day">${esc(kicker)}</span><span>${esc(D.weekday)}, <bdi>${esc(fmtDate(D.date))}</bdi></span></div>
-    ${pre}${greeting}
-    <h2 class="hero__title">${D.shabbat ? 'שבת שלום. ' : ''}${esc(D.title)}</h2>
-    <p class="hero__sub">${esc(D.subtitle)}</p>
-    <div class="hero__sleep">${ICON.moon.replace('<svg', '<svg width="20" height="20"')}<span>הלילה ישנים: <b>${esc(D.sleep)}</b></span></div>
-    <div class="hero__progress" aria-hidden="true"><i style="width:${progress}%"></i></div>`;
+    ${D.img ? `<img class="hero__img" src="img/${D.img}.jpg" alt="${esc(credit ? credit.title : D.title)}">` : ''}
+    <div class="hero__shade" aria-hidden="true"></div>
+    <div class="hero__top">
+      <span class="badge">${esc(kicker)}</span>
+      ${isToday ? '<span class="badge badge--live">היום</span>' : D.shabbat ? '<span class="badge">שבת</span>' : ''}
+    </div>
+    <div class="hero__body">
+      <p class="hero__kicker">${esc(D.weekday)}, <bdi>${esc(fmtDate(D.date))}</bdi></p>
+      ${pre}
+      <h2 class="hero__title">${esc(D.title)}</h2>
+      <p class="hero__sub">${esc(D.subtitle)}</p>
+    </div>`;
+
+  const R = D.route, rc = $('#route');
+  rc.hidden = !R;
+  if (R) {
+    const hotel = base && base.hotel;
+    const stopsN = D.stops.filter(s => s.kind !== 'hotel' && s.kind !== 'transit').length || D.stops.length;
+    rc.innerHTML = `
+      <div class="route__end"><div class="route__code">${esc(R.from)}</div><div class="route__city">${D.n > 0 ? 'יציאה בבוקר' : 'המראה'}</div></div>
+      <div class="route__mid"><div class="route__line">${ICON[R.mode] || ICON.bus}</div><div class="route__dur">${R.mode === 'flight' ? '' : 'כ-'}${esc(fmtMin(R.minutes))}</div></div>
+      <div class="route__end route__end--to"><div class="route__code">${esc(R.to)}</div><div class="route__city">${MODE_LABEL[R.mode] || ''}</div></div>
+      <dl class="route__meta">
+        <div><dt>לינה</dt><dd>${esc(D.sleep)}</dd></div>
+        <div><dt>${hotel ? 'טלפון מלון' : 'יום'}</dt><dd>${hotel ? `<a href="tel:${esc(hotel.tel.replace(/[^+\d]/g, ''))}" style="text-decoration:none;color:inherit"><bdi>${esc(hotel.tel)}</bdi></a>` : esc(D.weekday)}</dd></div>
+        <div><dt>תחנות</dt><dd>${stopsN}</dd></div>
+      </dl>`;
+  }
 
   renderWeather();
 
-  const tip = D.tipOfDay;
-  $('#tipOfDay').hidden = !tip;
-  if (tip) $('#tipOfDay').innerHTML = `
-    <div class="tip__kicker">${ICON.info.replace('<svg', '<svg width="18" height="18"')}<span>הטיפ של היום</span></div>
-    <h3 class="tip__title">${esc(tip.title)}</h3>
-    <p class="tip__text">${bidi(tip.text)}</p>
-    ${tip.url ? `<a class="tip__src" href="${esc(tip.url)}" target="_blank" rel="noopener">מאיפה זה</a>` : ''}`;
+  const N = D.note, nc = $('#note');
+  nc.hidden = !N;
+  if (N) nc.innerHTML = `<span class="note__icon" aria-hidden="true">${ICON.info}</span><div><h3 class="note__title">${esc(N.title)}</h3><p class="note__text">${bidi(N.text)}</p></div>`;
 
-  // timeline: stops with travel legs between them
   const legs = D.legs || [];
   let html = '';
   D.stops.forEach((s, i) => {
     if (i > 0 && legs[i - 1]) html += legHTML(legs[i - 1]);
-    else if (i === 0 && legs[0] && legs[0].mode === 'flight' && D.stops.length === 2) { /* leg rendered between */ }
-    html += `<li class="stop" style="--k:${KIND_VAR[s.kind] || 'var(--gray)'}">
-      <div class="stop__dot"><i>${ICON[s.kind] || ICON.pin}</i></div>
-      <div class="stop__body">
+    html += `<li class="stop card" style="--k:${KIND_VAR[s.kind] || 'var(--label-2)'}">
+      <div class="stop__head"><span class="stop__ico">${ICON[s.kind] || ICON.pin}</span><div style="min-width:0">
         <h3 class="stop__name">${esc(s.name)}</h3>
-        ${s.ja || s.en ? `<span class="stop__ja">${s.ja ? `<span class="ja">${esc(s.ja)}</span> · ` : ''}<bdi>${esc(s.en)}</bdi></span>` : ''}
-        ${s.blurb ? `<p class="stop__blurb">${bidi(s.blurb)}</p>` : ''}
-      </div></li>`;
+        ${s.ja || s.en ? `<span class="stop__ja">${s.ja ? `<span class="ja">${esc(s.ja)}</span> · ` : ''}<bdi>${esc(s.en || '')}</bdi></span>` : ''}
+      </div></div>
+      ${s.lat ? `<a class="stop__go" href="${GMAPS_LL(s)}" target="_blank" rel="noopener" aria-label="לפתוח את ${esc(s.name)} בגוגל מפות">${ICON.gmaps}</a>` : ''}
+      ${s.blurb ? `<p class="stop__blurb">${bidi(s.blurb)}</p>` : ''}
+    </li>`;
   });
-  // legs beyond the stops (e.g. a cruise with no destination)
   for (let j = D.stops.length - 1; j < legs.length; j++) if (legs[j]) html += legHTML(legs[j]);
   $('#timeline').innerHTML = html;
 
-  // day tips
   const tips = D.tips || [];
   $('#dayTipsWrap').hidden = !tips.length;
   $('#dayTips').innerHTML = tips.map(t => rowHTML(t)).join('');
-
-  $('#daySource').textContent = D.n > 0 ? 'לפי חוברת הטיול. שעות וסדר הביקורים לפי המדריך בשטח.' : 'שעות הטיסות לפי הכרטיסים.';
-
+  $('#daySource').textContent = D.n > 0 ? 'לפי חוברת הטיול ודף המלונות. סדר הביקורים לפי המדריך בשטח.' : 'שעות הטיסות לפי הכרטיסים.';
   renderMiniMap(D);
 }
 
@@ -322,20 +334,20 @@ function pinIcon(kind, big = false) {
   return L.divIcon({ className: '', html: `<div class="pin${big ? ' pin--big' : ''}" style="--k:${KIND_VAR[kind] || 'var(--gray)'}">${ICON[kind] || ICON.pin}</div>`, iconSize: big ? [38, 38] : [30, 30], iconAnchor: big ? [19, 19] : [15, 15] });
 }
 function renderMiniMap(D) {
-  const pts = D.stops.filter(s => s.lat && s.lng);
+  const pts = D.stops.filter(s => s.lat && s.lng && s.lat > 20);
   const wrap = $('#miniMapWrap');
   wrap.hidden = pts.length === 0;
   if (!pts.length) return;
   if (!state.miniMap) {
-    state.miniMap = L.map('miniMap', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false, boxZoom: false, keyboard: false, tap: false });
+    state.miniMap = L.map('miniMap', { zoomControl: false, attributionControl: false, scrollWheelZoom: false });
     L.tileLayer(TILE_URL, { maxZoom: 18 }).addTo(state.miniMap);
     state.miniLayer = L.layerGroup().addTo(state.miniMap);
   }
   state.miniLayer.clearLayers();
-  pts.forEach(s => L.marker([s.lat, s.lng], { icon: pinIcon(s.kind), interactive: false }).addTo(state.miniLayer));
+  pts.forEach(s => { const m = L.marker([s.lat, s.lng], { icon: pinIcon(s.kind), title: s.name }).addTo(state.miniLayer); m.on('click', () => openPlace(s, D)); });
   const b = L.latLngBounds(pts.map(s => [s.lat, s.lng]));
-  state.miniMap.fitBounds(b.pad(0.35), { maxZoom: 13, animate: false });
-  setTimeout(() => state.miniMap.invalidateSize(), 50);
+  state.miniMap.fitBounds(b.pad(0.3), { maxZoom: 13, animate: false });
+  setTimeout(() => { state.miniMap.invalidateSize(); state.miniMap.fitBounds(b.pad(0.3), { maxZoom: 13, animate: false }); }, 60);
 }
 function renderBigMap() {
   const T = state.trip;
@@ -381,17 +393,23 @@ function locateMe() {
 // ---------- place sheet ----------
 function openPlace(s, d) {
   const k = s.kind || 'sight';
+  const hotel = k === 'hotel' && d ? (state.trip.bases.find(b => b.id === d.base) || {}).hotel : null;
   $('#placeBody').innerHTML = `
     <div style="--k:${KIND_VAR[k]}">
-      <div class="place__kind">${ICON[k] || ICON.pin}<span>${esc(KIND_LABEL[k] || '')}${d ? ` · ${d.n > 0 ? `יום ${d.n}` : ''} ${esc(d.weekday)} ${shortDate(d.date)}` : ''}</span></div>
+      ${d && d.img && k !== 'hotel' ? `<img class="place__img" src="img/${d.img}.jpg" alt="">` : ''}
+      <div class="place__kind">${ICON[k] || ICON.pin}<span>${esc(KIND_LABEL[k] || '')}${d ? ` · ${d.n > 0 ? `יום ${d.n}, ` : ''}${esc(d.weekday)} ${shortDate(d.date)}` : ''}</span></div>
       <h2 class="place__name" id="placeTitle">${esc(s.name)}</h2>
       ${s.en ? `<p class="place__en">${esc(s.en)}</p>` : ''}
+      ${hotel ? `<p class="place__en">${esc(hotel.address)}</p>` : ''}
       ${s.ja ? `<div class="place__ja" lang="ja">${esc(s.ja)}</div><p class="place__hint">להראות לנהג או לשאול דרך</p>` : ''}
       ${s.blurb ? `<p class="place__blurb">${bidi(s.blurb)}</p>` : ''}
-      <a class="place__btn" href="https://maps.apple.com/?q=${encodeURIComponent(s.en || s.name)}&ll=${s.lat},${s.lng}" target="_blank" rel="noopener">${ICON.pin.replace('<svg', '<svg width="20" height="20"')}<span>לפתוח במפות</span></a>
+      <div class="place__btns">
+        <a class="place__btn place__btn--primary" href="${GMAPS_LL(s)}" target="_blank" rel="noopener">${ICON.gmaps}<span>גוגל מפות</span></a>
+        ${hotel ? `<a class="place__btn" href="tel:${esc(hotel.tel.replace(/[^+\d]/g, ''))}">${ICON.phone}<span>למלון</span></a>` : `<a class="place__btn" href="${AMAPS(s)}" target="_blank" rel="noopener">${ICON.pin}<span>מפות אפל</span></a>`}
+      </div>
     </div>`;
   const sh = $('#sheetPlace'), sc = $('#scrim');
-  sh.hidden = false; sc.hidden = false;
+  sh.hidden = false; sc.hidden = false; sh.scrollTop = 0;
   requestAnimationFrame(() => { sh.classList.add('is-on'); sc.classList.add('is-on'); });
   $('[data-close]', sh).focus({ preventScroll: true });
 }
@@ -417,7 +435,7 @@ function wireSheetDrag() {
 function renderJourney() {
   const T = state.trip, O = state.outline;
   const tripDays = T.days.filter(d => d.n > 0).length;
-  $('#journeyLead').textContent = `${tripDays} ימים ביפן, ${T.bases.filter(b => b.id !== 'bkk').length} ערי לינה, שתי שבתות. האדום הוא המסלול, המקווקו הן נסיעות היום.`;
+  $('#journeyLead').textContent = `${tripDays} ימים, ${T.bases.filter(b => b.id !== 'bkk').length} מלונות, שתי שבתות. הקו המלא הוא המסלול, המקווקו הן נסיעות היום. לחיצה על עיר פותחת את היום שלה.`;
 
   // projection shared with data/japan-outline.json
   const [LON0, LON1, LAT0, LAT1] = O.bbox, W = O.w, H = O.h;
@@ -444,6 +462,8 @@ function renderJourney() {
   ];
   const today = T.days[Math.min(Math.max(state.todayIdx, 0), T.days.length - 1)];
   const nowBase = today.base;
+  const firstDayOf = id => T.days.findIndex(d => d.base === id && d.n > 1);
+  const dayOfTrip = name => T.days.findIndex(d => d.title.includes(name) || d.subtitle.includes(name));
 
   // crop the viewBox to the journey (west Honshu to Tokyo), with margins
   const all = route.concat(trips).map(c => P(c.lat, c.lng));
@@ -457,17 +477,28 @@ function renderJourney() {
     <path class="rm-land" d="${O.d}"/>
     ${trips.map(t => `<path class="rm-trip" d="${pathD([P(t.from.lat, t.from.lng), P(t.lat, t.lng)])}"/>`).join('')}
     <path class="rm-route" d="${pathD(routePts)}"/>`;
-  trips.forEach(t => { const [x, y] = P(t.lat, t.lng); svg += `<circle class="rm-city rm-city--trip" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/><text class="rm-label rm-label--small" x="${(x + t.dx).toFixed(1)}" y="${(y + t.dy).toFixed(1)}" text-anchor="middle">${esc(t.name)}</text>`; });
+  trips.forEach(t => { const [x, y] = P(t.lat, t.lng); svg += `<circle class="rm-city rm-city--trip" data-day="${dayOfTrip(t.name)}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9"/><text class="rm-label rm-label--small" x="${(x + t.dx).toFixed(1)}" y="${(y + t.dy).toFixed(1)}" text-anchor="middle">${esc(t.name)}</text>`; });
   route.forEach(c => {
     const [x, y] = P(c.lat, c.lng); const r = c.nights ? 10 + c.nights * 1.6 : 7;
     const now = c.id && c.id === nowBase;
     if (now) svg += `<circle class="rm-now" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r + 8}"/>`;
-    svg += `<circle class="rm-city" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"${now ? ' style="fill:var(--accent)"' : ''}/>`;
+    svg += `<circle class="rm-city${now ? ' rm-city--now' : ''}" data-day="${c.id ? firstDayOf(c.id) : dayOfTrip(c.name)}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;
     svg += `<text class="rm-label" x="${(x + c.dx).toFixed(1)}" y="${(y + c.dy).toFixed(1)}" text-anchor="middle">${esc(c.name)}</text>`;
     if (c.nights) svg += `<text class="rm-nights" x="${(x + c.dx).toFixed(1)}" y="${(y + c.dy + 22).toFixed(1)}" text-anchor="middle">${c.nights} לילות</text>`;
   });
   svg += '</svg>';
   $('#routeMap').innerHTML = svg;
+  $$('.rm-city', $('#routeMap')).forEach(c => c.addEventListener('click', () => { const i = Number(c.dataset.day); if (i >= 0) { setDay(i); go('today'); } }));
+
+  $('#cities').innerHTML = T.bases.filter(b => b.id !== 'bkk').map(b => {
+    const i = firstDayOf(b.id);
+    return `<button class="city" data-i="${i}" aria-label="${esc(b.city)}"><img src="img/${b.img}.jpg" alt=""><span class="city__shade"></span>
+      ${b.ja ? `<span class="city__ja" aria-hidden="true">${esc(b.ja)}</span>` : ''}
+      <span class="city__body"><p class="city__name">${esc(b.city)}</p><p class="city__meta">${b.nights} לילות${b.hotel ? ` · ${esc(b.hotel.he)}` : ''}</p></span></button>`;
+  }).join('');
+  $$('.city').forEach(b => b.addEventListener('click', () => { setDay(Number(b.dataset.i)); go('today'); }));
+  $('#credits').innerHTML = esc(T.guide.credits || '') + (state.credits ? ` <a href="#tips" id="creditsLink">רשימת התמונות</a>` : '');
+  const cl = $('#creditsLink'); if (cl) cl.addEventListener('click', e => { e.preventDefault(); state.tipSeg = 'useful'; renderTipsShell(); go('tips'); });
 
   // day list grouped by where they sleep
   const groups = [];
@@ -482,7 +513,7 @@ function renderJourney() {
     const [city, ja] = label[g.key] || [base ? base.city : g.key, base ? base.ja : ''];
     const nights = base && !label[g.key] ? `${base.nights} לילות` : '';
     return `<section class="jgroup"><div class="jgroup__head"><h2 class="jgroup__city">${esc(city)} ${ja ? `<span class="jgroup__ja" aria-hidden="true">${esc(ja)}</span>` : ''}</h2><span class="jgroup__nights">${nights}</span></div>
-      <div>${g.days.map(i => jdayHTML(T.days[i], i)).join('')}</div></section>`;
+      <div class="jlist">${g.days.map(i => jdayHTML(T.days[i], i)).join('')}</div></section>`;
   }).join('');
   $$('.jday').forEach(b => b.addEventListener('click', () => { setDay(Number(b.dataset.i)); go('today'); }));
 }
@@ -505,16 +536,21 @@ function renderTipsShell() {
 function renderTipsBody() {
   const G = state.trip.guide, k = state.tipSeg;
   const body = $('#tipsBody');
-  const lead = { kosher: 'הטיול דואג לאוכל. זה למי שרוצה עוד, או ליום חופשי. לבדוק שעות פתיחה לפני שיוצאים.', shop: 'איפה המציאות, ואיך עובד הפטור ממס.', tech: 'החנויות שבני יאהב.', shabbat: 'זמני השבת לפי השעון המקומי ביפן.', useful: 'מספרים, שעות וכמה דברים קטנים שכדאי לדעת.', phrases: 'עשר מילים שפותחות דלתות. להראות את היפנית, או לנסות להגיד.' };
+  const lead = { kosher: 'הטיול דואג לאוכל. זה למי שרוצה עוד, או ליום חופשי. לבדוק שעות פתיחה לפני שיוצאים.', shop: 'איפה המציאות, ואיך עובד הפטור ממס.', tech: 'החנויות שבני יאהב.', shabbat: 'זמני השבת לפי השעון המקומי ביפן.', useful: 'המלונות, מספרים ושעות.', phrases: 'עשר מילים שפותחות דלתות. להראות את היפנית, או לנסות להגיד.' };
   let html = `<p class="tipsec__lead">${lead[k] || ''}</p>`;
   if (k === 'phrases') {
     html += `<div class="rows">${G.phrases.map(p => `<div class="phrase"><span class="phrase__he">${esc(p.he)}</span><span class="phrase__ja" lang="ja">${esc(p.ja)}</span><span class="phrase__ro">${esc(p.romaji)}</span></div>`).join('')}</div>`;
   } else if (k === 'shabbat') {
     const S = G.shabbat || [];
-    html += S.length ? `<div class="shabbat-grid">${S.map(s => `<div class="shabbat-card"><h3>${esc(s.city)}</h3><p class="footnote" style="margin:0 0 8px">${esc(s.date)}</p><dl><dt>כניסה</dt><dd><bdi>${esc(s.candles)}</bdi></dd><dt>יציאה</dt><dd><bdi>${esc(s.havdalah)}</bdi></dd></dl></div>`).join('')}</div>` : '<p class="footnote">זמני השבת יתווספו בקרוב.</p>';
+    html += S.length ? `<div class="shabbat-grid">${S.map(s => `<div class="shabbat-card card"><h3>${esc(s.city)}</h3><p class="footnote" style="margin:0 0 8px">${esc(s.date)}</p><dl><dt>כניסה</dt><dd><bdi>${esc(s.candles)}</bdi></dd><dt>יציאה</dt><dd><bdi>${esc(s.havdalah)}</bdi></dd></dl></div>`).join('')}</div>` : '<p class="footnote">זמני השבת יתווספו בקרוב.</p>';
     html += `<p class="footnote" style="margin-top:12px">${esc((G.shabbatNote) || '')}</p>`;
     const extra = (G.shabbatTips || []);
     if (extra.length) html += `<ul class="rows" style="margin-top:12px">${extra.map(rowHTML).join('')}</ul>`;
+  } else if (k === 'useful') {
+    html += `<section class="tipsec"><h2 class="title2">המלונות</h2><div class="rows">${(G.hotels || []).map(h => `<div class="hotel"><p class="hotel__name">${esc(h.he)} · <bdi>${esc(h.name)}</bdi></p><p class="hotel__meta"><bdi>${esc(h.address)}</bdi></p><p class="hotel__meta">${shortDate(h.checkin)} עד ${shortDate(h.checkout)}, ${h.nights} לילות${h.approx ? ' · המיקום במפה משוער' : ''}</p>
+      <div class="hotel__actions"><a class="btn-sm" href="tel:${esc(h.tel.replace(/[^+\d]/g, ''))}">${ICON.phone}<bdi>${esc(h.tel)}</bdi></a><a class="btn-sm" href="${GMAPS_LL(h)}" target="_blank" rel="noopener">${ICON.gmaps}גוגל מפות</a></div></div>`).join('')}</div></section>`;
+    (G.useful || []).forEach(sec => { html += `<section class="tipsec"><h2 class="title2">${esc(sec.title)}</h2><ul class="rows">${sec.items.map(it => rowHTML({ ...it, kind: it.kind || 'info' })).join('')}</ul></section>`; });
+    if (state.credits) html += `<section class="tipsec"><h2 class="title2">התמונות</h2><p class="tipsec__lead">${esc(G.credits || '')}</p><ul class="rows">${Object.values(state.credits).map(c => `<li class="row" style="--k:var(--k-transit)"><span class="row__icon">${ICON.pin}</span><p class="row__text"><bdi>${esc(c.title)}</bdi> <a href="${esc(c.page)}" target="_blank" rel="noopener">מקור</a></p></li>`).join('')}</ul></section>`;
   } else {
     const groups = G[k] || [];
     if (!groups.length) html += '<p class="footnote">בקרוב.</p>';

@@ -6,8 +6,8 @@
 <title>יפן של שמחה ובני</title>
 <meta name="description" content="המסע של שמחה ובני ביפן, יום אחרי יום: איפה אנחנו, לאן נוסעים, מזג אוויר וטיפים.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#F6F1E8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E9ECFA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1120" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -42,9 +42,11 @@
 
     <article class="hero" id="hero" aria-live="polite"></article>
 
+    <section class="card route" id="route" aria-label="הנסיעה של היום"></section>
+
     <section class="card weather" id="weather" aria-label="מזג האוויר"></section>
 
-    <section class="card tip" id="tipOfDay" aria-label="הטיפ של היום"></section>
+    <section class="card note" id="note" aria-label="חשוב להיום"></section>
 
     <section class="section">
       <h2 class="title2">מה רואים היום</h2>
@@ -53,10 +55,10 @@
 
     <section class="section" id="miniMapWrap">
       <h2 class="title2">איפה זה</h2>
-      <button class="minimap" id="miniMapBtn" aria-label="פתיחת המפה של היום">
-        <div class="minimap__map" id="miniMap" aria-hidden="true"></div>
-        <span class="minimap__label">למפה המלאה</span>
-      </button>
+      <div class="minimap">
+        <div class="minimap__map" id="miniMap" role="region" aria-label="מפת היום"></div>
+        <button class="minimap__label" id="miniMapBtn">למפה המלאה</button>
+      </div>
     </section>
 
     <section class="section" id="dayTipsWrap">
@@ -72,7 +74,9 @@
     <header class="top"><h1 class="largetitle">המסע</h1></header>
     <p class="lead" id="journeyLead"></p>
     <figure class="routemap card" id="routeMap" aria-label="מפת המסלול ביפן"></figure>
+    <div class="cities" id="cities"></div>
     <section class="section" id="journeyList"></section>
+    <p class="foot" id="credits"></p>
   </section>
 
   <!-- ===== Map ===== -->
