@@ -1,16 +1,16 @@
 /* Japan trip service worker. App shell precached; map tiles cached as they are seen.
    Bump CACHE to ship an update. */
-const CACHE = 'japan-v4';
+const CACHE = 'japan-v5';
 const TILES = 'japan-tiles-v1';
 const TILE_CAP = 700;
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
-  './data/trip.json',
-  './data/japan-outline.json',
-  './data/credits.json',
+  './styles.css?v=5',
+  './app.js?v=5',
+  './data/trip.json?v=5',
+  './data/japan-outline.json?v=5',
+  './data/credits.json?v=5',
   './img/bkk.jpg',
   './img/hakone.jpg',
   './img/home.jpg',
@@ -82,6 +82,12 @@ self.addEventListener('fetch', e => {
       fetch(req).then(res => { caches.open(CACHE).then(c => c.put('./index.html', res.clone())); return res; })
         .catch(() => caches.match('./index.html'))
     );
+    return;
+  }
+
+  // Versioned app files: network-first so an update is never shadowed by an old cache.
+  if (url.search.startsWith('?v=')) {
+    e.respondWith(fetch(req).then(res => { if (res && res.status === 200) caches.open(CACHE).then(c => c.put(req, res.clone())); return res; }).catch(() => caches.match(req)));
     return;
   }
 

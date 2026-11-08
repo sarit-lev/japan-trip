@@ -111,7 +111,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json'), loadJSON('data/japan-outline.json'), loadJSON('data/credits.json').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=5'), loadJSON('data/japan-outline.json?v=5'), loadJSON('data/credits.json?v=5').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -133,7 +133,11 @@ async function boot() {
   const hash = location.hash.replace('#', '');
   if (['today', 'journey', 'map', 'tips'].includes(hash)) go(hash, false);
 
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (navigator.serviceWorker.controller && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register('sw.js').then(r => r.update && r.update()).catch(() => {});
+  }
 }
 
 // ---------- navigation ----------
