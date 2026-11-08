@@ -23,7 +23,7 @@ const ICON = {
   shop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 14H5L6 7z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>',
   tech: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></svg>',
   hotel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V8M3 14h18v4M7 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM11 11h7a3 3 0 0 1 3 3"/></svg>',
-  transit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 3l-7 8 4 1-1 6 10-10-4-1 1-4z"/></svg>',
+  transit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14l8-2 4-8 2 1-2 8 6 3-1 2-6-1-3 4-2-1 1-4-6-1z"/></svg>',
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
   kosher: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l3 5h6l-4.5 4L18 18l-6-3-6 3 1.5-6L3 8h6z"/></svg>',
   shabbat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 21h8M10 21v-9h4v9M12 12V7M12 3c1 1.5 1.5 2.5 0 4-1.5-1.5-1-2.5 0-4z"/></svg>',
@@ -38,8 +38,8 @@ const ICON = {
   moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
 };
 const MODE_LABEL = { bus: 'אוטובוס', train: 'רכבת', shinkansen: 'שינקנסן', boat: 'שייט', ropeway: 'רכבל', walk: 'ברגל', flight: 'טיסה' };
-const KIND_LABEL = { sight: 'אתר', food: 'אוכל כשר', shop: 'קניות', tech: 'טכנולוגיה', hotel: 'לינה', transit: 'בדרך', info: 'כדאי לדעת', kosher: 'כשרות', shabbat: 'שבת' };
-const KIND_VAR = { sight: 'var(--k-sight)', food: 'var(--k-food)', kosher: 'var(--k-food)', shop: 'var(--k-shop)', tech: 'var(--k-tech)', hotel: 'var(--k-hotel)', transit: 'var(--k-transit)', info: 'var(--k-transit)', shabbat: 'var(--k-sight)' };
+const KIND_LABEL = { sight: 'אתר', food: 'אוכל כשר', shop: 'קניות', tech: 'טכנולוגיה', hotel: 'לינה', transit: 'שדה תעופה', train: 'רכבת', info: 'כדאי לדעת', kosher: 'כשרות', shabbat: 'שבת' };
+const KIND_VAR = { sight: 'var(--k-sight)', food: 'var(--k-food)', kosher: 'var(--k-food)', shop: 'var(--k-shop)', tech: 'var(--k-tech)', hotel: 'var(--k-hotel)', transit: 'var(--k-transit)', train: 'var(--k-transit)', info: 'var(--k-transit)', shabbat: 'var(--k-sight)' };
 
 // ---------- weather icons (WMO codes) ----------
 const WX = {
@@ -111,7 +111,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=5'), loadJSON('data/japan-outline.json?v=5'), loadJSON('data/credits.json?v=5').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=6'), loadJSON('data/japan-outline.json?v=6'), loadJSON('data/credits.json?v=6').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -125,6 +125,7 @@ async function boot() {
   state.today = today;
 
   wireNav();
+  tickClock(); setInterval(tickClock, 15000); document.addEventListener('visibilitychange', tickClock);
   renderToday();
   renderJourney();
   renderTipsShell();
@@ -138,6 +139,17 @@ async function boot() {
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (navigator.serviceWorker.controller && !reloaded) { reloaded = true; location.reload(); } });
     navigator.serviceWorker.register('sw.js').then(r => r.update && r.update()).catch(() => {});
   }
+}
+
+// ---------- clock: Israel time, always on top ----------
+function tickClock() {
+  const T = state.trip; if (!T) return;
+  const D = T.days[Math.min(Math.max(state.todayIdx, 0), T.days.length - 1)];
+  const hereTz = (D.weatherAt && D.weatherAt.tz) || T.tz;
+  const f = tz => new Intl.DateTimeFormat('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+  const hereName = hereTz === 'Asia/Bangkok' ? 'בבנגקוק' : hereTz === 'Asia/Jerusalem' ? '' : 'ביפן';
+  const el = $('#clock');
+  el.innerHTML = `<span class="clock__il">בארץ <b><bdi>${f('Asia/Jerusalem')}</bdi></b></span>${hereName ? `<span class="clock__sep"></span><span class="clock__here">${hereName} <b><bdi>${f(hereTz)}</bdi></b></span>` : ''}`;
 }
 
 // ---------- navigation ----------

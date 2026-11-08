@@ -69,7 +69,7 @@ bdi,.num{unicode-bidi:isolate}
 .footnote{font-size:1.5rem;color:var(--label-2)}
 
 .app{max-width:600px;margin:0 auto;padding:0 var(--gutter) calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom))}
-.top{padding-top:calc(14px + env(safe-area-inset-top));margin-bottom:12px}
+.top{padding-top:calc(58px + env(safe-area-inset-top));margin-bottom:12px}
 .top__row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .section{margin-top:24px}
 .lead{color:var(--label-2);margin:0 0 16px;font-size:1.7rem}
@@ -231,10 +231,10 @@ bdi,.num{unicode-bidi:isolate}
 
 /* big map */
 .screen--map{padding:0;margin:0 calc(-1 * var(--gutter));position:relative;height:100dvh}
-.top--overlay{position:absolute;inset-inline-start:var(--gutter);top:0;z-index:1001;pointer-events:none}
+.top--overlay{position:absolute;inset-inline-start:var(--gutter);top:calc(54px + env(safe-area-inset-top));padding-top:0;margin:0;z-index:1001;pointer-events:none}
 .top--overlay .largetitle{background:var(--glass-bg);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:6px 16px;border-radius:999px;box-shadow:var(--glass-shadow);border:1px solid var(--line);font-size:2.2rem;pointer-events:auto}
 .bigmap{position:absolute;inset:0;background:var(--surface-2)}
-.chips{position:absolute;inset-inline:0;top:calc(74px + env(safe-area-inset-top));z-index:1001;display:flex;gap:8px;overflow-x:auto;padding:4px var(--gutter) 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips{position:absolute;inset-inline:0;top:calc(118px + env(safe-area-inset-top));z-index:1001;display:flex;gap:8px;overflow-x:auto;padding:4px var(--gutter) 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
 .locate{position:absolute;inset-inline-start:var(--gutter);bottom:calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom));z-index:1001}
 .leaflet-container{font-family:var(--font);background:var(--surface-2)}
@@ -317,3 +317,8 @@ bdi,.num{unicode-bidi:isolate}
   .sheet.is-on{opacity:1}
   .rm-now{animation:none;opacity:.3;transform:scale(1.6)}
 }
+
+/* Israel time, fixed at the very top of every screen */
+.clock{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:1050;height:38px;padding:0 16px;display:inline-flex;align-items:center;gap:12px;font-size:1.5rem;color:var(--label-2);white-space:nowrap;width:max-content;font-variant-numeric:tabular-nums}
+.clock b{color:var(--label);font-weight:700;font-size:1.7rem}
+.clock__sep{width:1px;height:18px;background:var(--line)}
