@@ -112,20 +112,15 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=15'), loadJSON('data/japan-outline.json?v=15'), loadJSON('data/credits.json?v=15').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=16'), loadJSON('data/japan-outline.json?v=16'), loadJSON('data/credits.json?v=16').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
-  const q = new URLSearchParams(location.search);
-  const forced = q.get('date');
-  const today = forced || isoToday(trip.tz);
-  const idx = trip.days.findIndex(d => d.date === today);
-  if (idx >= 0) state.todayIdx = idx;
-  else if (today < trip.days[0].date) state.todayIdx = -1;      // before the trip
-  else state.todayIdx = trip.days.length;                        // after the trip
-  state.dayIdx = Math.min(Math.max(state.todayIdx, 0), trip.days.length - 1);
-  state.today = today;
+  resolveToday();
 
   wireNav();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncToday(); });
+  window.addEventListener('focus', syncToday); window.addEventListener('pageshow', syncToday);
+  setInterval(syncToday, 60000);
   renderToday();
   renderJourney();
   renderTipsShell();
@@ -139,6 +134,32 @@ async function boot() {
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (navigator.serviceWorker.controller && !reloaded) { reloaded = true; location.reload(); } });
     navigator.serviceWorker.register('sw.js').then(r => r.update && r.update()).catch(() => {});
   }
+}
+
+// ---------- today, by the calendar where they are ----------
+function todayISO() {
+  const q = new URLSearchParams(location.search);
+  const forced = q.get('date');
+  if (forced) return forced;
+  // before Japan the days run on Israel / Bangkok time; from the Tokyo flight on, Japan time
+  const bkk = isoToday('Asia/Bangkok');
+  return bkk < '2026-11-11' ? bkk : isoToday(state.trip.tz);
+}
+function resolveToday() {
+  const T = state.trip, today = todayISO();
+  const idx = T.days.findIndex(d => d.date === today);
+  state.todayIdx = idx >= 0 ? idx : (today < T.days[0].date ? -1 : T.days.length);
+  state.today = today;
+  state.dayIdx = Math.min(Math.max(state.todayIdx, 0), T.days.length - 1);
+}
+// When the date changes (midnight, or the app reopened on a new day) jump to the new day by itself.
+function syncToday() {
+  if (!state.trip) return;
+  const prev = state.today;
+  if (todayISO() === prev) return;
+  resolveToday();
+  renderToday(); renderJourney();
+  if (state.screen === 'today') window.scrollTo(0, 0);
 }
 
 // ---------- navigation ----------
