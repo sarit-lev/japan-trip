@@ -14,12 +14,23 @@
    "city": "בנגקוק",
    "en": "Bangkok",
    "ja": "",
-   "lat": 13.746,
-   "lng": 100.534,
+   "lat": 13.7443,
+   "lng": 100.5415,
    "nights": 1,
    "tz": "Asia/Bangkok",
    "climate": "ממוצע נובמבר בבנגקוק: 25 עד 33 מעלות, לח, גשם רק בכמה ימים",
-   "img": "bkk"
+   "img": "bkk",
+   "hotel": {
+    "name": "InterContinental Bangkok",
+    "he": "אינטרקונטיננטל בנגקוק",
+    "address": "973 Ploenchit Road, Pathumwan, Bangkok 10330",
+    "tel": "+66 2 656 0444",
+    "lat": 13.7443,
+    "lng": 100.5415,
+    "checkin": "2026-11-10",
+    "checkout": "2026-11-11",
+    "nights": 1
+   }
   },
   {
    "id": "tokyo",
@@ -116,13 +127,13 @@
      "blurb": "נפגשים בטרמינל 3. דרכונים, כרטיסים, ומטען יד עם שכבה חמה לטוקיו."
     },
     {
-     "name": "בנגקוק",
-     "en": "Bangkok",
+     "name": "אינטרקונטיננטל בנגקוק",
+     "en": "InterContinental Bangkok",
      "ja": "",
-     "lat": 13.746,
-     "lng": 100.534,
+     "lat": 13.7443,
+     "lng": 100.5415,
      "kind": "hotel",
-     "blurb": "לילה אחד בדרך. המלון ליד קניון במרכז העיר."
+     "blurb": "רחוב פלונצ'יט, ליד קניוני Gaysorn ו-Central World. תחנת BTS צ'יט לום צמודה."
     }
    ],
    "legs": [
@@ -143,16 +154,17 @@
     "minutes": 630,
     "mode": "flight"
    },
-   "note": null
+   "note": null,
+   "hotel": "bkk"
   },
   {
    "n": 0,
    "date": "2026-11-10",
    "weekday": "שלישי",
    "title": "לילה בבנגקוק",
-   "subtitle": "עצירת ביניים במרכז העיר",
+   "subtitle": "עצירת ביניים. המלון במרכז, ליד Central World",
    "base": "bkk",
-   "sleep": "בנגקוק",
+   "sleep": "אינטרקונטיננטל בנגקוק",
    "shabbat": false,
    "weatherAt": {
     "name": "בנגקוק",
@@ -162,13 +174,13 @@
    },
    "stops": [
     {
-     "name": "המלון בבנגקוק",
-     "en": "Bangkok hotel",
+     "name": "אינטרקונטיננטל בנגקוק",
+     "en": "InterContinental Bangkok",
      "ja": "",
-     "lat": 13.746,
-     "lng": 100.534,
+     "lat": 13.7443,
+     "lng": 100.5415,
      "kind": "hotel",
-     "blurb": "ליד קניון במרכז. יום לנוח, להסתובב בקניון, ולאסוף כוחות ליפן."
+     "blurb": "רחוב פלונצ'יט, ליד קניוני Gaysorn ו-Central World. תחנת BTS צ'יט לום צמודה."
     },
     {
      "name": "J Cafe ו-J Deli, סוקומווית",
@@ -198,11 +210,17 @@
     }
    ],
    "img": "bkk",
-   "route": null,
+   "route": {
+    "from": "המלון",
+    "to": "J Cafe",
+    "minutes": 15,
+    "mode": "train"
+   },
    "note": {
     "title": "אוכל כשר בבנגקוק",
-    "text": "J Deli ו-J Cafe של חב\"ד, Mille Malle קומה 3, סוקומווית סוי 20. בית חב\"ד קאו סאן, 18 Phra Sumen Rd, ווטסאפ +66 2 629 2755. לכתוב לפני שיוצאים."
-   }
+    "text": "J Deli ו-J Cafe של חב\"ד, Mille Malle קומה 3, סוקומווית סוי 20: שלוש תחנות BTS מצ'יט לום לאסוק, כ-15 דקות. בית חב\"ד קאו סאן, 18 Phra Sumen Rd, רחוק יותר, במונית. ווטסאפ +66 2 629 2755. לכתוב לפני שיוצאים."
+   },
+   "hotel": "bkk"
   },
   {
    "n": 1,
@@ -1726,6 +1744,17 @@
   ],
   "credits": "תמונות: ויקיפדיה וויקימדיה קומונס, רישיון חופשי. מפות: OpenStreetMap. מזג אוויר: Open-Meteo.",
   "hotels": [
+   {
+    "name": "InterContinental Bangkok",
+    "he": "אינטרקונטיננטל בנגקוק",
+    "address": "973 Ploenchit Road, Pathumwan, Bangkok 10330",
+    "tel": "+66 2 656 0444",
+    "lat": 13.7443,
+    "lng": 100.5415,
+    "checkin": "2026-11-10",
+    "checkout": "2026-11-11",
+    "nights": 1
+   },
    {
     "name": "Sheraton Miyako Hotel Tokyo",
     "he": "שרתון מיאקו טוקיו",
