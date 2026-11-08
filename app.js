@@ -112,7 +112,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=16'), loadJSON('data/japan-outline.json?v=16'), loadJSON('data/credits.json?v=16').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=17'), loadJSON('data/japan-outline.json?v=17'), loadJSON('data/credits.json?v=17').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   resolveToday();
@@ -218,7 +218,7 @@ function renderToday() {
   $('#dayPrev').disabled = state.dayIdx === 0;
   $('#dayNext').disabled = state.dayIdx === n - 1;
   $('#btnBackToday').hidden = isToday || before || after;
-  $('#todayTitle').textContent = isToday ? 'היום' : before ? 'בקרוב' : after ? 'המסע' : (state.dayIdx < state.todayIdx ? 'היה' : 'בהמשך');
+  $('#todayTitle').innerHTML = `${isToday ? 'היום' : before ? 'בקרוב' : after ? 'המסע' : (state.dayIdx < state.todayIdx ? 'היה' : 'בהמשך')} <span class="top__date"><bdi>${esc(shortDate(D.date))}</bdi></span>`;
 
   const base = T.bases.find(b => b.id === D.base);
   const tripDays = T.days.filter(d => d.n > 0).length;
