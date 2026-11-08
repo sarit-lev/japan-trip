@@ -112,7 +112,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=12'), loadJSON('data/japan-outline.json?v=12'), loadJSON('data/credits.json?v=12').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=14'), loadJSON('data/japan-outline.json?v=14'), loadJSON('data/credits.json?v=14').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   const q = new URLSearchParams(location.search);
@@ -126,7 +126,6 @@ async function boot() {
   state.today = today;
 
   wireNav();
-  tickClock(); setInterval(tickClock, 15000); document.addEventListener('visibilitychange', tickClock);
   renderToday();
   renderJourney();
   renderTipsShell();
@@ -140,12 +139,6 @@ async function boot() {
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (navigator.serviceWorker.controller && !reloaded) { reloaded = true; location.reload(); } });
     navigator.serviceWorker.register('sw.js').then(r => r.update && r.update()).catch(() => {});
   }
-}
-
-// ---------- clock: Israel time, always on top ----------
-function tickClock() {
-  const t = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-  $$('[data-clock]').forEach(el => { el.innerHTML = `${ICON.flagIL}<b><bdi>${t}</bdi></b>`; el.setAttribute('aria-label', `השעה בישראל ${t}`); });
 }
 
 // ---------- navigation ----------
@@ -233,17 +226,11 @@ function renderToday() {
   const R = D.route, rc = $('#route');
   rc.hidden = !R;
   if (R) {
-    const hotel = base && base.hotel;
-    const stopsN = D.stops.filter(s => s.kind !== 'hotel' && s.kind !== 'transit').length || D.stops.length;
     rc.innerHTML = `
       <div class="route__end"><div class="route__code">${esc(R.from)}</div><div class="route__city">${R.mode === 'flight' ? 'המראה' : 'יציאה'}</div></div>
       <div class="route__mid"><div class="route__line">${ICON[R.mode] || ICON.bus}</div><div class="route__dur">${R.mode === 'flight' ? '' : 'כ-'}${esc(fmtMin(R.minutes))}</div></div>
       <div class="route__end route__end--to"><div class="route__code">${esc(R.to)}</div><div class="route__city">${MODE_LABEL[R.mode] || ''}</div></div>
-      <dl class="route__meta">
-        <div><dt>לינה</dt><dd>${esc(D.sleep)}</dd></div>
-        <div><dt>${hotel ? 'טלפון מלון' : 'יום'}</dt><dd>${hotel ? `<a href="tel:${esc(hotel.tel.replace(/[^+\d]/g, ''))}" style="text-decoration:none;color:inherit"><bdi>${esc(hotel.tel)}</bdi></a>` : esc(D.weekday)}</dd></div>
-        <div><dt>תחנות</dt><dd>${stopsN}</dd></div>
-      </dl>`;
+`;
   }
 
   renderWeather();
@@ -253,38 +240,56 @@ function renderToday() {
   if (M) mc.innerHTML = `
     <div class="mission__head"><span class="badge badge--live">משימה</span><h3 class="mission__title">${esc(M.title)}</h3></div>
     <div class="mission__imgs">${M.imgs.map(i => `<img src="${esc(i.src)}" alt="${esc(i.alt)}">`).join('')}</div>
-    <p class="mission__text">${bidi(M.text)}</p>
+    <ul class="bullets" style="margin-bottom:12px">${M.text.split('. ').filter(Boolean).map(t => `<li>${bidi(t.replace(/\.$/, ''))}</li>`).join('')}</ul>
     <div class="mission__show"><span class="mission__th" lang="th">${esc(M.show.th)}</span><span class="mission__en"><bdi>${esc(M.show.en)}</bdi></span><span class="mission__hint">${esc(M.show.he)}</span></div>
-    <p class="mission__text">${bidi(M.where)}</p>
+    <ul class="bullets" style="margin-bottom:12px">${M.where.split('. ').filter(Boolean).map(t => `<li>${bidi(t.replace(/\.$/, ''))}</li>`).join('')}</ul>
     <a class="place__btn place__btn--primary" href="${GMAPS_LL(M.store)}" target="_blank" rel="noopener">${ICON.gmaps}<span>${esc(M.store.name)} בגוגל מפות</span></a>`;
-
-  const N = D.note, nc = $('#note');
-  nc.hidden = !N;
-  if (N) nc.innerHTML = `<span class="note__icon" aria-hidden="true">${ICON.info}</span><div><h3 class="note__title">${esc(N.title)}</h3><p class="note__text">${bidi(N.text)}</p></div>`;
 
   const legs = D.legs || [];
   let html = '';
-  D.stops.forEach((s, i) => {
-    if (i > 0 && legs[i - 1]) html += legHTML(legs[i - 1]);
-    html += `<li class="stop card" style="--k:${KIND_VAR[s.kind] || 'var(--label-2)'}">
-      <div class="stop__head"><span class="stop__ico">${ICON[s.kind] || ICON.pin}</span><div style="min-width:0">
-        <h3 class="stop__name">${esc(s.name)}</h3>
-        ${s.ja || s.en ? `<span class="stop__ja">${s.ja ? `<span class="ja">${esc(s.ja)}</span> · ` : ''}<bdi>${esc(s.en || '')}</bdi></span>` : ''}
-      </div></div>
-      ${s.lat ? `<a class="stop__go" href="${GMAPS_LL(s)}" target="_blank" rel="noopener" aria-label="לפתוח את ${esc(s.name)} בגוגל מפות">${ICON.gmaps}</a>` : ''}
-      ${s.blurb ? `<p class="stop__blurb">${bidi(s.blurb)}</p>` : ''}
-    </li>`;
+  legs.filter(l => l.mode === 'flight').forEach(l => { html += tlegHTML(l); });
+  const places = D.stops.filter(s => s.kind !== 'hotel'), hotels = D.stops.filter(s => s.kind === 'hotel');
+  const ordered = D.n > 0 ? places.concat(hotels) : hotels.concat(places);
+  ordered.forEach((s, i) => {
+    const trainLeg = legs.find(l => l.mode !== 'flight' && i === 0);
+    if (trainLeg && i === 0) html += tlegHTML(trainLeg);
+    html += `<li class="tstop" style="--k:${KIND_VAR[s.kind] || 'var(--label-2)'}" data-i="${D.stops.indexOf(s)}">
+      <button class="tstop__btn" aria-expanded="false">
+        <span class="tstop__dot">${ICON[s.kind] || ICON.pin}</span>
+        <span><span class="tstop__name">${esc(s.name)}</span>${s.en ? `<span class="tstop__sub"><bdi>${esc(s.en)}</bdi></span>` : ''}</span>
+        <svg class="tstop__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="tstop__more">
+        ${s.ja ? `<span class="tstop__ja" lang="ja">${esc(s.ja)}</span>` : ''}
+        ${(s.bullets && s.bullets.length) ? `<ul class="bullets">${s.bullets.map(b => `<li>${bidi(b)}</li>`).join('')}</ul>` : (s.blurb ? `<p class="opt__text">${bidi(s.blurb)}</p>` : '')}
+        ${s.lat ? `<a class="tstop__go" href="${GMAPS_LL(s)}" target="_blank" rel="noopener">${ICON.gmaps}<span>גוגל מפות</span></a>` : ''}
+      </div></li>`;
+    if (i === 0 && D.date === '2026-11-23') legs.filter(l => l.mode === 'train').forEach(l => { html += tlegHTML(l); });
   });
-  for (let j = D.stops.length - 1; j < legs.length; j++) if (legs[j]) html += legHTML(legs[j]);
   $('#timeline').innerHTML = html;
+  $('#timelineWrap').hidden = !html;
+  $('#timelineTitle').textContent = D.n > 0 && places.length ? 'המסלול היום' : 'היום';
+  $$('.tstop__btn', $('#timeline')).forEach(b => b.addEventListener('click', () => { const li = b.closest('.tstop'); const on = li.classList.toggle('is-open'); b.setAttribute('aria-expanded', on); }));
 
-  const tips = D.tips || [];
-  $('#dayTipsWrap').hidden = !tips.length;
-  $('#dayTips').innerHTML = tips.map(t => rowHTML(t)).join('');
+  // last day: how to reach the airport on their own
+  const A = D.airport, ac = $('#airport');
+  ac.hidden = !A;
+  if (A) ac.innerHTML = `<h3 class="airport__title">${esc(A.title)}</h3><p class="airport__lead">${bidi(A.lead)}</p>
+    ${A.options.map(o => `<div class="opt"><p class="opt__name">${esc(o.name)}${o.best ? '<span class="badge badge--live">מומלץ</span>' : ''}</p><p class="opt__text">${bidi(o.text)}${o.url ? ` <a href="${esc(o.url)}" target="_blank" rel="noopener">מסלול ומחיר</a>` : ''}</p></div>`).join('')}
+    <p class="airport__tip">${esc(A.tip)}</p>`;
+
+  const otw = D.onTheWay || [];
+  $('#dayTipsWrap').hidden = !otw.length;
+  $('#dayTipsWrap').classList.add('otw');
+  $('#dayTips').className = 'bullets card';
+  $('#dayTips').innerHTML = otw.map(t => `<li>${bidi(t.text)}${t.url ? ` <a href="${esc(t.url)}" target="_blank" rel="noopener">מקור</a>` : ''}</li>`).join('');
   $('#daySource').textContent = D.n > 0 ? 'לפי חוברת הטיול ודף המלונות. סדר הביקורים לפי המדריך בשטח.' : 'שעות הטיסות לפי הכרטיסים.';
   renderMiniMap(D);
 }
 
+function tlegHTML(l) {
+  return `<li class="tleg"><span class="leg__chip">${ICON[l.mode] || ICON.bus}<span>${MODE_LABEL[l.mode] || ''} · ${esc(l.from)} ← ${esc(l.to)} · ${esc(fmtMin(l.minutes))}</span></span>${l.note ? `<span class="tleg__note">${bidi(l.note)}</span>` : ''}</li>`;
+}
 function legHTML(l) {
   const dest = l.to ? `${esc(l.from)} ← ${esc(l.to)}` : esc(l.from);
   return `<li class="leg"><span class="leg__chip">${ICON[l.mode] || ICON.bus}<span>${MODE_LABEL[l.mode] || ''} · ${l.approx ? 'כ-' : ''}${esc(fmtMin(l.minutes))}</span></span>${l.note ? `<span class="leg__note">${esc(l.note)}</span>` : ''}</li>`;
@@ -325,7 +330,8 @@ async function loadWeather() {
 function wxFor(D) {
   if (!state.weather || !D.weatherAt) return null;
   const k = `${D.weatherAt.lat},${D.weatherAt.lng}`;
-  return (state.weather.data[k] || {})[D.date] || null;
+  const w = (state.weather.data[k] || {})[D.date];
+  return w && w.max != null ? w : null;
 }
 function renderWeather() {
   const D = state.trip.days[state.dayIdx];
@@ -345,7 +351,6 @@ function renderWeather() {
     <div class="weather__icon" aria-hidden="true">${WX[ic]}</div>
     <div class="weather__main"><span class="weather__temp"><bdi>${Math.round(w.max)}°</bdi></span><span class="weather__desc">${esc(desc)} ב${esc(place)}</span></div>
     <div class="weather__meta"><span>לילה <bdi>${Math.round(w.min)}°</bdi></span><span>גשם <bdi>${w.rain ?? 0}%</bdi></span><span>זריחה <bdi>${timeOf(w.sunrise)}</bdi></span><span>שקיעה <bdi>${timeOf(w.sunset)}</bdi></span></div>
-    <p class="weather__advice">${esc(advice(w))}</p>
     ${ageH >= 6 ? `<p class="weather__stale">עודכן לפני ${ageH} שעות</p>` : ''}`;
 }
 
@@ -549,7 +554,7 @@ function jdayHTML(d, i) {
 }
 
 // ---------- Tips ----------
-const SEGS = [['kosher', 'כשרות'], ['shop', 'מציאות'], ['tech', 'טכנולוגיה'], ['shabbat', 'שבת'], ['useful', 'שימושי'], ['phrases', 'מילים']];
+const SEGS = [['kosher', 'כשרות'], ['shop', 'מציאות'], ['shabbat', 'שבת'], ['useful', 'שימושי'], ['phrases', 'מילים']];
 function renderTipsShell() {
   $('#tipSegments').innerHTML = SEGS.map(([k, l]) => `<button class="seg${state.tipSeg === k ? ' is-active' : ''}" role="tab" aria-selected="${state.tipSeg === k}" data-seg="${k}">${l}</button>`).join('');
   $$('.seg').forEach(b => b.addEventListener('click', () => { state.tipSeg = b.dataset.seg; renderTipsShell(); }));
@@ -567,17 +572,17 @@ function renderTipsBody() {
     html += S.length ? `<div class="shabbat-grid">${S.map(s => `<div class="shabbat-card card"><h3>${esc(s.city)}</h3><p class="footnote" style="margin:0 0 8px">${esc(s.date)}</p><dl><dt>כניסה</dt><dd><bdi>${esc(s.candles)}</bdi></dd><dt>יציאה</dt><dd><bdi>${esc(s.havdalah)}</bdi></dd></dl></div>`).join('')}</div>` : '<p class="footnote">זמני השבת יתווספו בקרוב.</p>';
     html += `<p class="footnote" style="margin-top:12px">${esc((G.shabbatNote) || '')}</p>`;
     const extra = (G.shabbatTips || []);
-    if (extra.length) html += `<ul class="rows" style="margin-top:12px">${extra.map(rowHTML).join('')}</ul>`;
+    if (extra.length) html += `<ul class="bullets card" style="margin-top:12px">${extra.map(t => `<li>${bidi(t.text)}</li>`).join('')}</ul>`;
   } else if (k === 'useful') {
     html += `<section class="tipsec"><h2 class="title2">המלונות</h2><div class="rows">${(G.hotels || []).map(h => `<div class="hotel"><p class="hotel__name">${esc(h.he)} · <bdi>${esc(h.name)}</bdi></p><p class="hotel__meta"><bdi>${esc(h.address)}</bdi></p><p class="hotel__meta">${shortDate(h.checkin)} עד ${shortDate(h.checkout)}, ${h.nights} לילות${h.approx ? ' · המיקום במפה משוער' : ''}</p>
       <div class="hotel__actions"><a class="btn-sm" href="tel:${esc(h.tel.replace(/[^+\d]/g, ''))}">${ICON.phone}<bdi>${esc(h.tel)}</bdi></a><a class="btn-sm" href="${GMAPS_LL(h)}" target="_blank" rel="noopener">${ICON.gmaps}גוגל מפות</a></div></div>`).join('')}</div></section>`;
-    (G.useful || []).forEach(sec => { html += `<section class="tipsec"><h2 class="title2">${esc(sec.title)}</h2><ul class="rows">${sec.items.map(it => rowHTML({ ...it, kind: it.kind || 'info' })).join('')}</ul></section>`; });
+    (G.useful || []).forEach(sec => { html += `<section class="tipsec"><h2 class="title2">${esc(sec.title)}</h2><ul class="bullets card">${sec.items.map(it => `<li>${bidi(it.text)}${it.url ? ` <a href="${esc(it.url)}" target="_blank" rel="noopener">מקור</a>` : ''}</li>`).join('')}</ul></section>`; });
     if (state.credits) html += `<section class="tipsec"><h2 class="title2">התמונות</h2><p class="tipsec__lead">${esc(G.credits || '')}</p><ul class="rows">${Object.values(state.credits).map(c => `<li class="row" style="--k:var(--k-transit)"><span class="row__icon">${ICON.pin}</span><p class="row__text"><bdi>${esc(c.title)}</bdi> <a href="${esc(c.page)}" target="_blank" rel="noopener">מקור</a></p></li>`).join('')}</ul></section>`;
   } else {
     const groups = G[k] || [];
     if (!groups.length) html += '<p class="footnote">בקרוב.</p>';
     groups.forEach(sec => {
-      html += `<section class="tipsec"><h2 class="title2">${esc(sec.title)}</h2>${sec.lead ? `<p class="tipsec__lead">${esc(sec.lead)}</p>` : ''}<ul class="rows">${sec.items.map(it => rowHTML({ ...it, kind: it.kind || k })).join('')}</ul></section>`;
+      html += `<section class="tipsec"><h2 class="title2">${esc(sec.title)}</h2>${sec.lead ? `<p class="tipsec__lead">${esc(sec.lead)}</p>` : ''}<ul class="bullets card">${sec.items.map(it => `<li>${bidi(it.text)}${it.url ? ` <a href="${esc(it.url)}" target="_blank" rel="noopener">מקור</a>` : ''}</li>`).join('')}</ul></section>`;
     });
   }
   body.innerHTML = html;

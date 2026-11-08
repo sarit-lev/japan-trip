@@ -129,11 +129,11 @@ bdi,.num{unicode-bidi:isolate}
 .route__meta dd{margin:2px 0 0;font-weight:700;font-size:1.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* weather */
-.weather{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:center;margin-top:12px}
-.weather__icon{width:56px;height:56px;grid-row:span 2;color:var(--label)}
+.weather{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:center;margin-top:12px;padding:14px 18px}
+.weather__icon{width:48px;height:48px;grid-row:span 2;color:var(--label)}
 .weather__icon svg{width:100%;height:100%}
 .weather__main{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.weather__temp{font-size:3.2rem;font-weight:700;line-height:1}
+.weather__temp{font-size:2.8rem;font-weight:700;line-height:1}
 .weather__desc{font-size:1.7rem;font-weight:600}
 .weather__meta{color:var(--label-2);font-size:1.5rem;display:flex;gap:14px;flex-wrap:wrap}
 .weather__advice{grid-column:1 / -1;margin:10px 0 0;padding-top:12px;border-top:1px solid var(--separator);font-size:1.7rem}
@@ -318,10 +318,42 @@ bdi,.num{unicode-bidi:isolate}
   .rm-now{animation:none;opacity:.3;transform:scale(1.6)}
 }
 
-/* Israel time: flag in a circle plus the hour, in the title row */
-.clock{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px 0 6px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:1.7rem;font-weight:700;color:var(--label);white-space:nowrap;flex:0 0 auto;font-variant-numeric:tabular-nums}
-.clock .flag{width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 1px var(--line);flex:0 0 auto}
-.clock b{font-weight:700}
-.top__row .clock{margin-inline-start:auto}
-.top__row .stepper{margin-inline-start:8px}
-.top--overlay .clock{pointer-events:auto;height:44px}
+
+/* compact timeline: dots and names, tap to expand */
+.timeline{display:block;position:relative;padding-inline-start:0}
+.timeline::before{content:"";position:absolute;inset-inline-start:17px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.tstop{list-style:none;position:relative;margin:0}
+.tstop__btn{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;width:100%;min-height:52px;padding:6px 0;text-align:start}
+.tstop__dot{width:36px;height:36px;border-radius:50%;background:var(--surface);border:2.5px solid var(--k, var(--label-3));display:grid;place-items:center;color:var(--k, var(--label-2));position:relative;z-index:1;box-shadow:0 0 0 4px var(--bg)}
+.tstop__dot svg{width:16px;height:16px}
+.tstop__name{font-size:1.9rem;font-weight:700;line-height:1.2;margin:0}
+.tstop__sub{display:block;color:var(--label-2);font-size:1.4rem;font-weight:400;margin-top:1px}
+.tstop__chev{width:28px;height:28px;color:var(--label-3);transition:transform 220ms}
+.tstop.is-open .tstop__chev{transform:rotate(180deg)}
+.tstop__more{display:none;margin:2px 0 10px;margin-inline-start:46px;padding:14px 16px;background:var(--surface);border-radius:var(--r-in);border:1px solid var(--line);box-shadow:var(--shadow)}
+.tstop.is-open .tstop__more{display:block}
+.tstop__ja{font-family:var(--font-ja);font-size:2rem;font-weight:700;direction:ltr;unicode-bidi:isolate;display:block;margin-bottom:6px}
+.bullets{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.bullets li{position:relative;padding-inline-start:16px;font-size:1.6rem;line-height:1.35}
+.bullets li::before{content:"";position:absolute;inset-inline-start:0;top:.55em;width:7px;height:7px;border-radius:50%;background:var(--lavender)}
+.bullets li a{margin-inline-start:6px;font-size:1.4rem;white-space:nowrap}
+.tstop__go{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;background:var(--surface-2);font-weight:600;font-size:1.4rem;text-decoration:none;color:var(--label);margin-top:10px}
+.tstop__go svg{width:16px;height:16px}
+.tleg{list-style:none;position:relative;margin:0;padding:4px 0 4px 46px;padding-inline-start:46px;padding-inline-end:0}
+.tleg .leg__chip{height:32px;font-size:1.4rem}
+.tleg__note{display:block;color:var(--label-3);font-size:1.3rem;margin-top:3px}
+.otw .bullets{padding:14px 16px}
+.otw .bullets li{font-size:1.6rem}
+.airport{margin-top:24px}
+.airport__title{font-size:2rem;font-weight:700;margin:0 0 6px}
+.airport__lead{color:var(--label-2);font-size:1.5rem;margin:0 0 12px}
+.opt{display:grid;gap:4px;padding:12px 0;border-top:1px solid var(--separator)}
+.opt:first-of-type{border-top:0;padding-top:0}
+.opt__name{display:flex;align-items:center;gap:8px;font-size:1.7rem;font-weight:700;margin:0;flex-wrap:wrap}
+.opt__name .badge{height:26px;font-size:1.2rem;padding:0 10px}
+.opt__text{margin:0;color:var(--label-2);font-size:1.5rem;line-height:1.4}
+.opt__text a{white-space:nowrap}
+.airport__tip{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--separator);font-weight:600;font-size:1.6rem}
+
+.bullets.card{padding:14px 16px}
+.bullets li a{display:inline}
