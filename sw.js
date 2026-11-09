@@ -1,16 +1,16 @@
 /* Japan trip service worker. App shell precached; map tiles cached as they are seen.
    Bump CACHE to ship an update. */
-const CACHE = 'japan-v19';
+const CACHE = 'japan-v20';
 const TILES = 'japan-tiles-v1';
 const TILE_CAP = 700;
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=19',
-  './app.js?v=19',
-  './data/trip.json?v=19',
-  './data/japan-outline.json?v=19',
-  './data/credits.json?v=19',
+  './styles.css?v=20',
+  './app.js?v=20',
+  './data/trip.json?v=20',
+  './data/japan-outline.json?v=20',
+  './data/credits.json?v=20',
   './img/bkk.jpg',
   './img/hakone.jpg',
   './img/home.jpg',

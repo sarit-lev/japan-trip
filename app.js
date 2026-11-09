@@ -119,7 +119,7 @@ async function loadJSON(path) { const r = await fetch(path); if (!r.ok) throw ne
 
 // ---------- boot ----------
 async function boot() {
-  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=19'), loadJSON('data/japan-outline.json?v=19'), loadJSON('data/credits.json?v=19').catch(() => null)]);
+  const [trip, outline, credits] = await Promise.all([loadJSON('data/trip.json?v=20'), loadJSON('data/japan-outline.json?v=20'), loadJSON('data/credits.json?v=20').catch(() => null)]);
   state.trip = trip; state.outline = outline; state.credits = credits;
 
   resolveToday();
